@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:test_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+  cache:
+    type: none
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  port: 8082
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+jwt:
+  secret: VGhpc0lzQVNlY3VyZVRlc3RKd3RTZWNyZXRLZXlGb3JFdmVudFNlcnZpY2UyMDI2
