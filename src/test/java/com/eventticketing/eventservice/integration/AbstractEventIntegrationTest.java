@@ -1,5 +1,6 @@
 package com.eventticketing.eventservice.integration;
 
+import com.eventticketing.eventservice.configuration.TestCacheConfiguration;
 import com.eventticketing.eventservice.entity.Event;
 import com.eventticketing.eventservice.enums.EventStatus;
 import com.eventticketing.eventservice.repository.EventRepository;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@Import(TestCacheConfiguration.class)
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
@@ -32,20 +35,10 @@ public abstract class AbstractEventIntegrationTest {
     protected UUID organizerId;
     protected LocalDateTime eventDateTime;
 
-    @Autowired
-    protected CacheManager cacheManager;
-
     @BeforeEach
     void baseSetUp() {
 
         eventRepository.deleteAll();
-        cacheManager.getCacheNames().forEach(cacheName -> {
-            var cache = cacheManager.getCache(cacheName);
-
-            if (cache != null){
-                cache.clear();
-            }
-        });
 
         SecurityContextHolder.clearContext();
         organizerId = UUID.randomUUID();

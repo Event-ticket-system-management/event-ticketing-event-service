@@ -11,6 +11,9 @@ spring:
       ddl-auto: create-drop
     show-sql: true
 
+  cache:
+    type: none
+
   data:
     redis:
       host: localhost
