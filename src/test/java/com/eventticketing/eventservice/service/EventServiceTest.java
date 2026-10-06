@@ -34,7 +34,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class EventServiceImplTest {
+class EventServiceTest {
 
     @Mock
     private EventRepository eventRepository;
@@ -91,10 +91,6 @@ class EventServiceImplTest {
                 .organizerId(organizerId)
                 .build();
     }
-
-    // =========================================================
-    // CREATE EVENT
-    // =========================================================
 
     @Test
     void createEvent_ShouldCreateEvent_WhenVenueIsAvailable() {
@@ -170,9 +166,6 @@ class EventServiceImplTest {
         verifyNoInteractions(objectMapper);
     }
 
-    // =========================================================
-    // GET EVENT BY ID
-    // =========================================================
 
     @Test
     void getEventById_ShouldReturnEvent_WhenEventExists() {
@@ -210,9 +203,6 @@ class EventServiceImplTest {
         verifyNoInteractions(objectMapper);
     }
 
-    // =========================================================
-    // GET ALL UPCOMING EVENTS
-    // =========================================================
 
     @Test
     void getAllUpComingEvents_ShouldReturnPaginatedEvents() {
@@ -260,9 +250,6 @@ class EventServiceImplTest {
         verify(objectMapper).toEventResponse(event);
     }
 
-    // =========================================================
-    // UPDATE EVENT
-    // =========================================================
 
     @Test
     void updateEvent_ShouldUpdateEvent_WhenRequestIsValid() {
@@ -502,10 +489,6 @@ class EventServiceImplTest {
         verifyNoInteractions(objectMapper);
     }
 
-    // =========================================================
-    // CANCEL EVENT
-    // =========================================================
-
     @Test
     void cancelEvent_ShouldCancelEvent_WhenRequestIsValid() {
 
@@ -601,10 +584,6 @@ class EventServiceImplTest {
 
         verify(eventRepository).findById(eventId);
     }
-
-    // =========================================================
-    // HELPER
-    // =========================================================
 
     private UpdateEventRequestDto createUpdateRequest() {
 
