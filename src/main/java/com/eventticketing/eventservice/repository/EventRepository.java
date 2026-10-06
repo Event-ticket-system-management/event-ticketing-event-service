@@ -15,7 +15,7 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
       FROM Event e
       WHERE LOWER(e.venue) = LOWER(:venue)
       AND e.eventDateTime < :endTime
-      AND e.endDateTime < :startTime
+      AND e.endDateTime > :startTime
       AND e.status != 'CANCELLED'
     """)
     boolean existsVenueConflict(
