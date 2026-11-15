@@ -1,11 +1,12 @@
 package com.eventticketing.eventservice.security;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -15,9 +16,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @Component
-@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -28,52 +29,74 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        try {
+
            String authHeader = request.getHeader("Authorization");
            String jwtToken;
 
-           if (authHeader != null && authHeader.startsWith("Bearer ")){
+            if (authHeader == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            if (!authHeader.startsWith("Bearer ")) {
+                response.sendError(
+                        HttpServletResponse.SC_UNAUTHORIZED,
+                        "Invalid Authorization header"
+                );
+                return;
+            }
+
                jwtToken = authHeader.substring(7);
 
-               if (jwtProvider.validationToken(jwtToken)
-               && SecurityContextHolder.getContext().getAuthentication() == null) {
-                  String username = jwtProvider.extractUsername(jwtToken);
-                  List<String> roles =  jwtProvider.extractRoles(jwtToken);
+            try{
+                Claims claims =
+                        jwtProvider.validateAndExtractClaims(jwtToken);
 
-                  List<SimpleGrantedAuthority> authorities = roles.stream()
-                          .map(SimpleGrantedAuthority::new)
-                          .toList();
+                String userId = jwtProvider.extractUserId(claims);
 
-                   UsernamePasswordAuthenticationToken authentication =
-                           new UsernamePasswordAuthenticationToken(
-                                   username,
-                                   null,
-                                   authorities
-                           );
+                UUID.fromString(userId);
 
-                   authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                List<String> roles = jwtProvider.extractRoles(claims);
 
-                   SecurityContextHolder.getContext()
-                           .setAuthentication(authentication);
+                List<SimpleGrantedAuthority> authorities =
+                        roles.stream()
+                                .filter(role -> role != null
+                                        && role.matches("ROLE_[A-Z0-9_]+"))
+                                .map(SimpleGrantedAuthority::new)
+                                .toList();
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userId,
+                                null,
+                                authorities
+                        );
+
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource()
+                                .buildDetails(request)
+                );
+
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authentication);
 
 
-                   log.debug(
-                           "Successfully authenticated user: {} with roles: {}",
-                           username,
-                           roles
-                   );
-               }
-           }
-
-
-        }catch (Exception e){
-            log.error(
-                    "Cannot set user authentication in SecurityContext: {}",
-                    e.getMessage()
-            );
+        }catch (JwtException | IllegalArgumentException e) {
+                SecurityContextHolder.clearContext();
+                rejectRequest(response);
+                return;
         }
 
-        filterChain.doFilter(request,response);
+        filterChain.doFilter(request, response);
+    }
 
+    private void rejectRequest(
+            HttpServletResponse response
+    ) throws IOException {
+
+        response.sendError(
+                HttpServletResponse.SC_UNAUTHORIZED,
+                "Invalid or expired authentication token"
+        );
     }
 }
