@@ -1,4 +1,3 @@
-
 package com.eventticketing.eventservice.security;
 
 import io.jsonwebtoken.Claims;
