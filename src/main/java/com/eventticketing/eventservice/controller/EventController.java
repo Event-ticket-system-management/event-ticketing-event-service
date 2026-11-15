@@ -7,6 +7,8 @@ import com.eventticketing.eventservice.dto.response.paginate.EventPaginateRespon
 import com.eventticketing.eventservice.exception.UnauthorizedAccessException;
 import com.eventticketing.eventservice.service.EventService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -56,8 +58,9 @@ public class EventController {
     }
 
     @GetMapping
-    public ResponseEntity<EventPaginateResponseDto> getAllUpcomingEvents(   @RequestParam int page,
-                                                                          @RequestParam int size) {
+    public ResponseEntity<EventPaginateResponseDto> getAllUpcomingEvents(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
 
         log.debug("REST Request to get all upcoming events");
 
@@ -116,9 +119,10 @@ public class EventController {
             );
         }
 
-        System.out.println("PRINCIPAL " + authentication.getPrincipal().toString());
+        Object principal = authentication.getPrincipal();
+        assert principal != null;
         return UUID.fromString(
-                authentication.getPrincipal().toString()
+                principal.toString()
         );
     }
 }
