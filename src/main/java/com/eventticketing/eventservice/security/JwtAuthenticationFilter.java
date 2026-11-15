@@ -30,61 +30,61 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
 
-           String authHeader = request.getHeader("Authorization");
-           String jwtToken;
+        String authHeader = request.getHeader("Authorization");
+        String jwtToken;
 
-            if (authHeader == null) {
-                filterChain.doFilter(request, response);
-                return;
-            }
+        if (authHeader == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            if (!authHeader.startsWith("Bearer ")) {
-                response.sendError(
-                        HttpServletResponse.SC_UNAUTHORIZED,
-                        "Invalid Authorization header"
-                );
-                return;
-            }
+        if (!authHeader.startsWith("Bearer ")) {
+            response.sendError(
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "Invalid Authorization header"
+            );
+            return;
+        }
 
-               jwtToken = authHeader.substring(7);
+        jwtToken = authHeader.substring(7);
 
-            try{
-                Claims claims =
-                        jwtProvider.validateAndExtractClaims(jwtToken);
+        try{
+            Claims claims =
+                    jwtProvider.validateAndExtractClaims(jwtToken);
 
-                String userId = jwtProvider.extractUserId(claims);
+            String userId = jwtProvider.extractUserId(claims);
 
-                UUID.fromString(userId);
+            UUID.fromString(userId);
 
-                List<String> roles = jwtProvider.extractRoles(claims);
+            List<String> roles = jwtProvider.extractRoles(claims);
 
-                List<SimpleGrantedAuthority> authorities =
-                        roles.stream()
-                                .filter(role -> role != null
-                                        && role.matches("ROLE_[A-Z0-9_]+"))
-                                .map(SimpleGrantedAuthority::new)
-                                .toList();
+            List<SimpleGrantedAuthority> authorities =
+                    roles.stream()
+                            .filter(role -> role != null
+                                    && role.matches("ROLE_[A-Z0-9_]+"))
+                            .map(SimpleGrantedAuthority::new)
+                            .toList();
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userId,
-                                null,
-                                authorities
-                        );
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            userId,
+                            null,
+                            authorities
+                    );
 
-                authentication.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request)
-                );
+            authentication.setDetails(
+                    new WebAuthenticationDetailsSource()
+                            .buildDetails(request)
+            );
 
-                SecurityContextHolder.getContext()
-                        .setAuthentication(authentication);
+            SecurityContextHolder.getContext()
+                    .setAuthentication(authentication);
 
 
         }catch (JwtException | IllegalArgumentException e) {
-                SecurityContextHolder.clearContext();
-                rejectRequest(response);
-                return;
+            SecurityContextHolder.clearContext();
+            rejectRequest(response);
+            return;
         }
 
         filterChain.doFilter(request, response);
