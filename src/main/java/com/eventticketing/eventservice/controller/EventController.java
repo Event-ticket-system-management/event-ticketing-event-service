@@ -119,6 +119,7 @@ public class EventController {
             );
         }
 
+
         Object principal = authentication.getPrincipal();
         assert principal != null;
         return UUID.fromString(
