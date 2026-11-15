@@ -23,16 +23,17 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http){
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(
                         SessionCreationPolicy.STATELESS
                 ))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/api/v1/events/**")
-                        .permitAll()
-
-                        .requestMatchers("/actuator/health")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/vi/events",
+                                "/api/v1/events/**")
                         .permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/events/**")
@@ -43,6 +44,13 @@ public class SecurityConfiguration {
 
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/events/**")
                         .hasRole("ORGANIZER")
+
+                        .requestMatchers(
+                                "/actuator/health",
+                                "/actuator/health/**"
+                        ).permitAll()
+
+                        .anyRequest().denyAll()
                 )
 
                 .addFilterBefore(
